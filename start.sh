@@ -1,7 +1,7 @@
 #!/bin/bash
 
 export RELX_REPLACE_OS_VARS=true
-export MARKVPASS=default
+export MARKVPASS=${MARKVPASS:-default}
 export USER=$(id -nu)
 
 
