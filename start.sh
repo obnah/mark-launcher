@@ -21,6 +21,6 @@ fi
 while true
 do
 	~aaronhan/share/markV_release.run
-	[[ $? -ne 666 ]] && break
+	[[ $? -eq 0 ]] && break
 done
 
