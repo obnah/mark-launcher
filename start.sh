@@ -6,7 +6,8 @@ export USER=$(id -nu)
 
 
 # choose ngsrx_build server
-local num choice
+num=
+choice=
 echo "Please choose the right ngsrx build server allocated to your team."
 echo "---   ------------------   ----   -------   ---------"
 echo "No.   Server               Disk   Size(G)   Team"
