@@ -3,6 +3,56 @@
 export RELX_REPLACE_OS_VARS=true
 export MARKVPASS=${MARKVPASS:-default}
 export USER=$(id -nu)
+export S2BEXT_NGSRXBUILD=${S2BEXT_NGSRXBUILD:-cnrd-ngsrx-build01}
+
+
+#start ssh-agent if not yet
+SSH_ENV="$HOME/.ssh/environment"
+
+function start_agent {
+    echo "Initialising new SSH agent..."
+    /usr/bin/ssh-agent | sed 's/^echo/#echo/' > "${SSH_ENV}"
+    echo succeeded
+    chmod 600 "${SSH_ENV}"
+    . "${SSH_ENV}" > /dev/null
+}
+
+# Source SSH settings, if applicable
+if [ -f "${SSH_ENV}" ]; then
+    . "${SSH_ENV}" > /dev/null
+    #ps ${SSH_AGENT_PID} doesn't work under cywgin
+    ps -ef | grep ${SSH_AGENT_PID} | grep ssh-agent$ > /dev/null || {
+        start_agent;
+    }
+else
+    start_agent;
+fi
+
+# ssh-add if not yet
+keyfile=~/.ssh/s2bweb/id_rsa
+mkdir -p $(dirname $keyfile)
+ssh-add -l | grep s2bweb > /dev/null || {
+	if [ ! -f $keyfile ]; then
+		echo "SSH key for s2bweb is not found, generate it."
+		echo "According to company's policy, a passphrase with lenght >= 12 is mandatory."
+		ssh-keygen -b 2048 -t rsa -f $keyfile -C "s2bweb" || {
+			echo "Failed to generate ssh key, exit!"
+			exit 1
+		}
+		echo "Install SSH Key to $S2BEXT_NGSRXBUILD"
+		ssh-copy-id -i $keyfile $S2BEXT_NGSRXBUILD || {
+			echo "Faile to install SSH key, remove $keyfile and exit!"
+			rm $keyfile
+			exit 1
+		}
+	fi
+
+	echo "Adding ssh key to ssh-agent, please type passphrase of your key file"
+	ssh-add $keyfile || {
+		echo "Failed to add ssh key, exit!"
+		exit 1
+	}
+}
 
 
 # choose ngsrx_build server
